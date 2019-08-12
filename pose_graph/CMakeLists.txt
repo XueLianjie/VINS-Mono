@@ -14,7 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
     cv_bridge
     roslib
     )
-
+set(OpenCV_DIR "~/Downloads/opencv-3.4.6/build")
 find_package(OpenCV)
 
 

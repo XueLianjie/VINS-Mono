@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_filters
   camera_model
 )
+set(OpenCV_DIR "~/Downloads/opencv-3.4.6/build")
 find_package(OpenCV REQUIRED)
 
 catkin_package(

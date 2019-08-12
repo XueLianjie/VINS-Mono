@@ -215,7 +215,7 @@ void process()
         con.wait(lk, [&]
                  {
             return (measurements = getMeasurements()).size() != 0;
-                 });
+                 }); // the process is blocked until lk is notified by some other process.
         lk.unlock();
         m_estimator.lock();
         for (auto &measurement : measurements)
@@ -357,8 +357,9 @@ int main(int argc, char **argv)
     ros::Subscriber sub_restart = n.subscribe("/feature_tracker/restart", 2000, restart_callback);
     ros::Subscriber sub_relo_points = n.subscribe("/pose_graph/match_points", 2000, relocalization_callback);
 
-    std::thread measurement_process{process};
-    ros::spin();
+    std::thread measurement_process{process};// enter process thread but blocked by condition variable. the main thread continues without waiting for 
+    // process thread, because measurement_process.join() is not add. 
+    ros::spin(); // block the main thread, and execute subscriber callbacks.
 
     return 0;
 }

@@ -12,7 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
     cv_bridge
     camera_model
     )
-
+set(OpenCV_DIR "~/Downloads/opencv-3.4.6/build")
 find_package(OpenCV REQUIRED)
 
 catkin_package()

@@ -14,7 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
     tf
     cv_bridge
     )
-
+set(OpenCV_DIR "~/Downloads/opencv-3.4.6/build")
 find_package(OpenCV REQUIRED)
 
 # message(WARNING "OpenCV_VERSION: ${OpenCV_VERSION}")
