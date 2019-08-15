@@ -96,9 +96,9 @@ void Estimator::processIMU(double dt, const Vector3d &linear_acceleration, const
     }
     if (frame_count != 0)
     {
-        pre_integrations[frame_count]->push_back(dt, linear_acceleration, angular_velocity);
-        //if(solver_flag != NON_LINEAR)
-            tmp_pre_integration->push_back(dt, linear_acceleration, angular_velocity);
+        pre_integrations[frame_count]->push_back(dt, linear_acceleration, angular_velocity); // mid point integration and cov propagation
+        //if(solver_flag != NON_LINEAR) 
+            tmp_pre_integration->push_back(dt, linear_acceleration, angular_velocity); // midpoint integration and covariance propagation
 
         dt_buf[frame_count].push_back(dt);
         linear_acceleration_buf[frame_count].push_back(linear_acceleration);
@@ -167,6 +167,20 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
             }
             if(result)
             {
+                        ROS_WARN("restart the estimator!");
+                // m_buf.lock();
+                // while(!feature_buf.empty())
+                //     feature_buf.pop();
+                // while(!imu_buf.empty())
+                //     imu_buf.pop();
+                // m_buf.unlock();
+                //m_estimator.lock();
+                clearState();
+                setParameter();
+                //m_estimator.unlock();
+                //current_time = -1;
+                //last_imu_t = 0;
+                /* 
                 solver_flag = NON_LINEAR;
                 solveOdometry();
                 slideWindow();
@@ -176,6 +190,7 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
                 last_P = Ps[WINDOW_SIZE];
                 last_R0 = Rs[0];
                 last_P0 = Ps[0];
+                */
                 
             }
             else

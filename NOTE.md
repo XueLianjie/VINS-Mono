@@ -3,9 +3,20 @@ VINS-Mono notes:
 1).相机外参、滑窗里的Ps、Ｖs、Ｒs、Bas、Bgs、class　IntegrationBase, FeatureManager, MotionEstimator, InitialEXRotation, 加速度观测量，角加速度观测量、
 2).parameters 只有一个作用就是read parameters
 3).feature_tracker是单独的一个node,负责接受raw image，然后进行图像特征提取和feature tracking，最后发布特征的topic。topic中包括feature的位置和feature的在像素图像上的速度。
-4).condition_variable，用于状态同步的变量，想要修改该变量的进程需要先获取该变量的lock，修改完该变量后需要将该变量的lock进行释放。
-5).vins_estimator中的feature_manager是对feature_tracker中pub出来的feature来进行管理。
+4).condition_variable，用于状态同步的变量，想要修改该变量的进程需要先获取该变量的lock，修改完该变量后需要将该变量的lock进行释放。condition_var.wait(lk, flag)会释放lk，然后等待标志flag为真，若满足则lk,然后进行操作
+5).vins_estimator中的feature_manager是对feature_tracker中pub出来的feature来进行管理。feature_tracker发布出来的feature 包括feature的三维位置坐标二维像素坐标和二维像素平面速度。
 6).主程序开启子线程，并进入process线程，等待measurement数据准备好后开始初始化和state estimator。主线程执行ros::spin，一直处理imu 和　image callback数据。两个线程之间采用condition_variable进行同步
-当前线程会unlock　m_buf，等待measurement 数据。或者等待notify_one.
+当前线程会unlock　m_buf，等待measurement 数据。或者等待notify_one.每当notify来了之后首先进行check是否来了measurements 数据。每个measurement数据里面可以包括多帧图像数据和IMU数据的集合。一帧图像数据和图像数据前面的IMU数据。每当数据ready之后开始进行IMU数据的处理
 7).feature tracker会对原始图像进行处理，如果原始图像时间戳不连续或者时间戳逆序则进行estimator reset.
-8).
+8).process　IMU对IMU数据进行预积分，采用的是中值积分。
+9).process_image对图像特征点进行处理，对image_frames的增加frame_count,只有当frame_count 增加到等于WINDOW_SIZE的时候才进行initial_structure:
+initial_structure: 1.check　IMU运动激励是否充分2.global sfm:维护窗口里的十帧图像数据，对比当前最新frame与窗口里的其他图像的共视features,超过30并且存在超过20个像素的视差。然后采用５点法计算出这两帧之间的R T,并三角化出两帧之间的所有公示特征点。然后采用PnP算法将窗口中余下所有frames的pose进行计算.基于这些初始值做full BA进行优化。
+10)陀螺仪bias标定，预积分可以获取k/k+1两帧之间的运动变换，sfm也可以获取两帧之间的运动关系，由于预积分会由于bias造成积分误差，将预积分量相对于bias做线性化近似，采用最小二乘的方式优化出最优的bias估计。
+11)速度，重力向量，几何尺度初始化。根据陀螺仪的bias结果进行速度、重力方向、几何尺度初始化。
+一共有两条线，一个是从sfm可以得到k->k+1时刻的相机位置约束，其中有个尺度s未知，从imu预积分也可以获取k->K+1时刻的body坐标系位置约束，
+body坐标系和相机坐标系之间有个相机和imu的外参约束。这样构成一个位置约束方程。另外一个约束方程是速度约束方程，
+从imu预积分可以得到k-k+1时刻的速度预积分量，从sfm几何约束关系也可以将k-k+1时刻的速度进行传递。两者可以构建另外一个约束方程。
+两者之间不完全重合，可以构建残差项，然后进行线性最小二乘求解即可。其中k和k+1时刻的速度，camera系下的重力方向，sfm的尺度未知。
+12)重力加速度refine，由于地球上重力加速度大小是一个固定值9.81，上面求出的重力加速度向量的大小可能不是9.81.因此我们需要根据加速度大小的约束对重力加速度进行refine。此时的重力加速度不再是三个自由度而是两个自由度的向量。
+具体方法就是将上面求出来的除了重力加速度的所有量都返带入回去原来的方程，然后将重力加速度向量进行重新参数化为g(g+\delta g)即一个单位方向向量加上正交的两个扰动向量，然后带入到原来的方程中，迭代求解该方程，此时未知量为两个扰动方向的分量大小，通过最小化该分量解出最优的重力加速度方向扰动量。
+13)后处理，gravity　refine　之后我们得到了sfm结构相对于世界坐标系的姿态，然后将sfm中的变量都旋转到实际坐标系下，相机系下的速度也可以转换到世界坐标系w下，sfm结构中的尺度也可以恢复到真实的物理尺度。

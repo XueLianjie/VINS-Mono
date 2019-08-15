@@ -156,7 +156,7 @@ void imu_callback(const sensor_msgs::ImuConstPtr &imu_msg)
         predict(imu_msg);
         std_msgs::Header header = imu_msg->header;
         header.frame_id = "world";
-        if (estimator.solver_flag == Estimator::SolverFlag::NON_LINEAR)
+        if (estimator.solver_flag == Estimator::SolverFlag::NON_LINEAR) // already initialized
             pubLatestOdometry(tmp_P, tmp_Q, tmp_V, header);
     }
 }
@@ -342,7 +342,7 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "vins_estimator");
     ros::NodeHandle n("~");
-    ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
+    ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug);
     readParameters(n);
     estimator.setParameter();
 #ifdef EIGEN_DONT_PARALLELIZE
