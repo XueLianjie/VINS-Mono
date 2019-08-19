@@ -37,7 +37,7 @@ void solveGyroscopeBias(map<double, ImageFrame> &all_image_frame, Vector3d* Bgs)
 }
 
 
-MatrixXd TangentBasis(Vector3d &g0)
+MatrixXd TangentBasis(Vector3d &g0) // to build gravity orthogonal tangent basis
 {
     Vector3d b, c;
     Vector3d a = g0.normalized();
