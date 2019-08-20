@@ -4,6 +4,8 @@ Estimator::Estimator(): f_manager{Rs}
 {
     ROS_INFO("init begins");
     clearState();
+    string velocities_path = "/home/dji/output/velocities.txt";
+    velocities_file = fopen(velocities_path.c_str(), "w");
 }
 
 void Estimator::setParameter()
@@ -79,6 +81,8 @@ void Estimator::clearState()
 
     drift_correct_r = Matrix3d::Identity();
     drift_correct_t = Vector3d::Zero();
+    //fclose(velocities_file);
+
 }
 
 void Estimator::processIMU(double dt, const Vector3d &linear_acceleration, const Vector3d &angular_velocity)
@@ -167,7 +171,7 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
             }
             if(result)
             {
-                        ROS_WARN("restart the estimator!");
+                // ROS_WARN("restart the estimator!");
                 // m_buf.lock();
                 // while(!feature_buf.empty())
                 //     feature_buf.pop();
@@ -175,6 +179,12 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
                 //     imu_buf.pop();
                 // m_buf.unlock();
                 //m_estimator.lock();
+                solver_flag = NON_LINEAR;
+                solveOdometry();
+                slideWindow();
+                f_manager.removeFailures();
+                ROS_INFO("Initialization finish!");
+                ROS_WARN("restart the estimator!");
                 clearState();
                 setParameter();
                 //m_estimator.unlock();
@@ -447,6 +457,8 @@ bool Estimator::visualInitialAlign()
         Ps[i] = rot_diff * Ps[i];
         Rs[i] = rot_diff * Rs[i];
         Vs[i] = rot_diff * Vs[i];
+        ROS_DEBUG_STREAM("Headers[i].stamp.toSec() " << Headers[i].stamp.toSec() << "vs " << Vs[i].norm());
+        fprintf(velocities_file, "%f %f\n", Headers[i].stamp.toSec(), Vs[i].norm());
     }
     ROS_DEBUG_STREAM("g0     " << g.transpose());
     ROS_DEBUG_STREAM("my R0  " << Utility::R2ypr(Rs[0]).transpose()); 

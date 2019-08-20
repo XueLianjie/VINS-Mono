@@ -37,7 +37,7 @@ void solveGyroscopeBias(map<double, ImageFrame> &all_image_frame, Vector3d* Bgs)
 }
 
 
-MatrixXd TangentBasis(Vector3d &g0) // to build gravity orthogonal tangent basis
+MatrixXd TangentBasis(Vector3d &g0) // to build gravity orthogonal tangent basis b, c whitch is othogonal to g0
 {
     Vector3d b, c;
     Vector3d a = g0.normalized();
@@ -54,7 +54,7 @@ MatrixXd TangentBasis(Vector3d &g0) // to build gravity orthogonal tangent basis
 
 void RefineGravity(map<double, ImageFrame> &all_image_frame, Vector3d &g, VectorXd &x)
 {
-    Vector3d g0 = g.normalized() * G.norm();
+    Vector3d g0 = g.normalized() * G.norm(); //norm 取模值  normalize()归一化为单位量
     Vector3d lx, ly;
     //VectorXd x;
     int all_frame_count = all_image_frame.size();
@@ -116,7 +116,7 @@ void RefineGravity(map<double, ImageFrame> &all_image_frame, Vector3d &g, Vector
             b = b * 1000.0;
             x = A.ldlt().solve(b);
             VectorXd dg = x.segment<2>(n_state - 3);
-            g0 = (g0 + lxly * dg).normalized() * G.norm();
+            g0 = (g0 + lxly * dg).normalized() * G.norm(); // 求解出g0的下降方向后进行微调，然后归一化，相当于每次只进行方向的微调，始终保持模值为9.81
             //double s = x(n_state - 1);
     }   
     g = g0;
