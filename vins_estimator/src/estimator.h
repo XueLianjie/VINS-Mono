@@ -137,4 +137,5 @@ class Estimator
     Quaterniond relo_relative_q;
     double relo_relative_yaw;
     FILE *velocities_file = NULL;
+    FILE *gravities_file = NULL;
 };

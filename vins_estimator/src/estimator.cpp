@@ -5,6 +5,8 @@ Estimator::Estimator(): f_manager{Rs}
     ROS_INFO("init begins");
     clearState();
     string velocities_path = "/home/dji/output/velocities.txt";
+    string gravities_path = "/home/dji/output/gravities.txt";
+    gravities_file = fopen(gravities_path.c_str(), "w");
     velocities_file = fopen(velocities_path.c_str(), "w");
 }
 
@@ -461,6 +463,7 @@ bool Estimator::visualInitialAlign()
         fprintf(velocities_file, "%f %f\n", Headers[i].stamp.toSec(), Vs[i].norm());
     }
     ROS_DEBUG_STREAM("g0     " << g.transpose());
+    fprintf(gravities_file, "%f %f\n", Headers[frame_count].stamp.toSec(), g.norm());
     ROS_DEBUG_STREAM("my R0  " << Utility::R2ypr(Rs[0]).transpose()); 
 
     return true;
