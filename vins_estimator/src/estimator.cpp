@@ -4,6 +4,8 @@ Estimator::Estimator(): f_manager{Rs}
 {
     ROS_INFO("init begins");
     clearState();
+    string velocities_path = "/home/dji/output/velocities_ground_truth.txt";
+    velocities_file = fopen(velocities_path.c_str(), "w");
 }
 
 void Estimator::setParameter()
@@ -79,6 +81,8 @@ void Estimator::clearState()
 
     drift_correct_r = Matrix3d::Identity();
     drift_correct_t = Vector3d::Zero();
+    //fclose(velocities_file);
+
 }
 
 void Estimator::processIMU(double dt, const Vector3d &linear_acceleration, const Vector3d &angular_velocity)
@@ -96,9 +100,9 @@ void Estimator::processIMU(double dt, const Vector3d &linear_acceleration, const
     }
     if (frame_count != 0)
     {
-        pre_integrations[frame_count]->push_back(dt, linear_acceleration, angular_velocity);
-        //if(solver_flag != NON_LINEAR)
-            tmp_pre_integration->push_back(dt, linear_acceleration, angular_velocity);
+        pre_integrations[frame_count]->push_back(dt, linear_acceleration, angular_velocity); // mid point integration and cov propagation
+        //if(solver_flag != NON_LINEAR) 
+            tmp_pre_integration->push_back(dt, linear_acceleration, angular_velocity); // midpoint integration and covariance propagation
 
         dt_buf[frame_count].push_back(dt);
         linear_acceleration_buf[frame_count].push_back(linear_acceleration);
@@ -211,6 +215,8 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
 
         last_R = Rs[WINDOW_SIZE];
         last_P = Ps[WINDOW_SIZE];
+        ROS_DEBUG_STREAM("Headers[i].stamp.toSec() " << Headers[WINDOW_SIZE].stamp.toSec() << "vs " << Vs[WINDOW_SIZE].norm());
+        fprintf(velocities_file, "%f %f\n", Headers[WINDOW_SIZE].stamp.toSec(), Vs[WINDOW_SIZE].norm());
         last_R0 = Rs[0];
         last_P0 = Ps[0];
     }
@@ -432,6 +438,8 @@ bool Estimator::visualInitialAlign()
         Ps[i] = rot_diff * Ps[i];
         Rs[i] = rot_diff * Rs[i];
         Vs[i] = rot_diff * Vs[i];
+        ROS_DEBUG_STREAM("Headers[i].stamp.toSec() " << Headers[i].stamp.toSec() << "vs " << Vs[i].norm());
+        fprintf(velocities_file, "%f %f\n", Headers[i].stamp.toSec(), Vs[i].norm());
     }
     ROS_DEBUG_STREAM("g0     " << g.transpose());
     ROS_DEBUG_STREAM("my R0  " << Utility::R2ypr(Rs[0]).transpose()); 
