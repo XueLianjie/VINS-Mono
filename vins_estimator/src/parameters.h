@@ -25,7 +25,7 @@ extern std::vector<Eigen::Matrix3d> RIC;
 extern std::vector<Eigen::Vector3d> TIC;
 extern Eigen::Vector3d G;
 
-extern double BIAS_ACC_THRESHOLD;
+extern double BIAS_ACC_THRESHOLD; //declare a variable that is defined in another source file
 extern double BIAS_GYR_THRESHOLD;
 extern double SOLVER_TIME;
 extern int NUM_ITERATIONS;

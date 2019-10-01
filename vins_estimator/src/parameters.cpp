@@ -11,7 +11,7 @@ std::vector<Eigen::Vector3d> TIC;
 Eigen::Vector3d G{0.0, 0.0, 9.8};
 
 double BIAS_ACC_THRESHOLD;
-double BIAS_GYR_THRESHOLD;
+double BIAS_GYR_THRESHOLD; //defination of a global variable 
 double SOLVER_TIME;
 int NUM_ITERATIONS;
 int ESTIMATE_EXTRINSIC;
